@@ -2,17 +2,8 @@ import pygame
 import random
 import json
 import time
-import cv2
-import mediapipe as mp
-import math
 
 pygame.init()
-
-# Initialize OpenCV webcam
-cap = cv2.VideoCapture(0)
-mp_hands = mp.solutions.hands
-hands = mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.7, min_tracking_confidence=0.7)
-mp_draw = mp.solutions.drawing_utils
 
 # Game Constants
 WIDTH, HEIGHT = 800, 400
@@ -42,34 +33,6 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 font = pygame.font.Font(None, 36)
 large_font = pygame.font.Font(None, 80)
-
-# Function to detect hand gesture
-def get_hand_gesture():
-    ret, frame = cap.read()
-    if not ret:
-        return "idle"
-    
-    frame = cv2.flip(frame, 1)
-    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    results = hands.process(rgb_frame)
-    
-    if results.multi_hand_landmarks:
-        for hand_landmarks in results.multi_hand_landmarks:
-            mp_draw.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
-            wrist = hand_landmarks.landmark[0]
-            index_tip = hand_landmarks.landmark[8]
-            
-            dx = index_tip.x - wrist.x
-            dy = index_tip.y - wrist.y
-            angle = math.degrees(math.atan2(-dy, dx))
-            
-            if angle < 0:
-                angle += 360
-            
-            if angle > 45 and angle < 135:
-                return "jump"
-    
-    return "idle"
 
 def load_leaderboard():
     try:
@@ -141,12 +104,9 @@ while True:
         pygame.display.update()
         clock.tick(60)
         
-        gesture = get_hand_gesture()
         keys = pygame.key.get_pressed()
-        if gesture == "jump" or keys[pygame.K_SPACE]:
+        if keys[pygame.K_SPACE]:
             trace.flap()
     
-    cap.release()
-    cv2.destroyAllWindows()
     pygame.quit()
     break
